@@ -129,7 +129,9 @@ public class AxisAlignedBoundingBox : IVisualizableAsLineList
         vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
         vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
 
-        var lineColours = vertices.Select(x => new Color(1.0F, 1.0F, 0.0F)).ToArray();
+        var colour = overrideColour ?? new Color(1.0F, 1.0F, 0.0F);
+        var lineColours = vertices
+            .Select(x => colour).ToArray();
 
         return new LineListPrimitive(graphicsDevice, [.. vertices], lineColours);
     }
