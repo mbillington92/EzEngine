@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using EzEngine.ContentManagement.Mono.Interop;
 using EzEngine.ContentManagement.Mono.Interop.Models;
-using ServiceStack;
 
 namespace EzEngine.Prototype.Cameras;
 
@@ -60,9 +59,7 @@ public class NoclipCamera
         var zPerpendicularCos = Math.Cos(double.DegreesToRadians(ZRotation - 90.0D));
         var zPerpendicularSin = Math.Sin(double.DegreesToRadians(ZRotation - 90.0D));
         var xRotationCos = Math.Cos(double.DegreesToRadians(LocalXRotation));
-        //var xRotationSin = Math.Cos(double.DegreesToRadians(LocalXRotation));
         var xPerpendicularCos = Math.Cos(double.DegreesToRadians(LocalXRotation - 90.0D));
-        //var xPerpendicularSin = Math.Cos(double.DegreesToRadians(LocalXRotation - 90.0D));
 
         var localMotionSignX = 0;
         var localMotionSignY = 0;
@@ -125,25 +122,6 @@ public class NoclipCamera
                 );
             }
         }
-        /*
-        for (int i = 0; i < volumeSets.Length; i++)
-        {
-            if (volumeSets[i].OverallAxisAlignedBoundingBox
-                .PointIsWithinXYZ(_from.X + Motion.X, _from.Y + Motion.Y, _from.Z + Motion.Z))
-            {
-                for (int j = 0; j < volumeSets[i].AxisAlignedBoundingBoxes.Length; j++)
-                {
-                    if (volumeSets[i].AxisAlignedBoundingBoxes[j]
-                        .PointIsWithinXYZ(_from.X + Motion.X, _from.Y + Motion.Y, _from.Z + Motion.Z))
-                    {
-                        if (_from.X > volumeSets[i].OverallAxisAlignedBoundingBox[j].MaximumExtents.X)
-                    }
-                }
-            }
-        }
-        */
-
-
         foreach (var volumeSet in volumeSets)
         {
             if (volumeSet.PointIsWithinAnyVolume(new Vector3(_from.X + Motion.X, _from.Y + Motion.Y, _from.Z + Motion.Z)))
@@ -156,41 +134,6 @@ public class NoclipCamera
             }
         }
 
-        /*
-        foreach (var volumeSet in volumeSets)
-        {
-            if (volumeSet.OverallAxisAlignedBoundingBox
-                .PointIsWithinXYZ(_from.X + Motion.X, _from.Y + Motion.Y, _from.Z + Motion.Z))
-            {
-                foreach (var volume in volumeSet.AxisAlignedBoundingBoxes)
-                {
-                    if (volume.PointIsWithinXYZ(_from.X + Motion.X, _from.Y + Motion.Y, _from.Z + Motion.Z))
-                    {
-                        if (_from.X > volume.MaximumExtents.X ||
-                            _from.X < volume.MinimumExtents.X)
-                        {
-                            Motion = new Vector3(
-                                0.0F,
-                                Motion.Y,
-                                Motion.Z
-                            );
-                        }
-                        if (_from.Y > volume.MaximumExtents.Y ||
-                            _from.Y < volume.MinimumExtents.Y)
-                        {
-                            Motion = new Vector3(
-                                Motion.X,
-                                0.0F,
-                                Motion.Z
-                            );
-                        }
-                        //break;
-                    }
-                }
-            }
-        }
-        */
-
         _from.X += Motion.X;
         _from.Y += Motion.Y;
 
@@ -200,7 +143,6 @@ public class NoclipCamera
 
         Mouse.SetPosition((int)(_graphicsDevice.Viewport.Width * 0.5), (int)(_graphicsDevice.Viewport.Height * 0.5));
 
-        //LastMousePosition = new Point(mouseState.X, mouseState.Y);
         LastMousePosition = new Point((int)(_graphicsDevice.Viewport.Width * 0.5), (int)(_graphicsDevice.Viewport.Height * 0.5));
 
         ViewMatrix = Matrix.CreateLookAt(_from, _to, _up);

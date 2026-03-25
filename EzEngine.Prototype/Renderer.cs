@@ -42,7 +42,6 @@ public class Renderer : Game
         foreach (var volumeSet in level.Volumes)
         {
             collisionVolumeSets.Add(volumeSet);
-            //_lineListPrimitives.Add(volumeSet.GetLineListPrimitive(GraphicsDevice));
             _lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetVisualization(GraphicsDevice));
             _lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetVisualization(GraphicsDevice)));
         }
@@ -78,7 +77,6 @@ public class Renderer : Game
                         foreach (var volumeSet in model.Volumes)
                         {
                             collisionVolumeSets.Add(volumeSet);
-                            //_lineListPrimitives.Add(volumeSet.GetLineListPrimitive(GraphicsDevice));
                             _lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetVisualization(GraphicsDevice));
                             _lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetVisualization(GraphicsDevice)));
                         }
@@ -88,7 +86,7 @@ public class Renderer : Game
                             modelPrimitive.CalculateLighting([], level.DirectionalLightVector, level.DirectionalLightColour.Value, new Color(0.15F, 0.175F, 0.2F));
 
                             _triangleListPrimitives.Add(new TriangleListPrimitive(GraphicsDevice,
-                                modelPrimitive.VertexPositions, //newVertexPositions,
+                                modelPrimitive.VertexPositions,
                                 modelPrimitive.LitVertexColours,
                                 modelPrimitive.VertexTextureCoordinates,
                                 modelPrimitive.TextureName));
@@ -104,21 +102,6 @@ public class Renderer : Game
                         levelPrimitive.LitVertexColours,
                         levelPrimitive.VertexTextureCoordinates,
                         levelPrimitive.TextureName));
-
-                    /*
-                    var centroids = levelPrimitive.GetCentroids(levelPrimitive.VertexPositions);
-                    var relativeNormals = new List<Vector3>();
-                    for (int j = 0; j < levelPrimitive.VertexPositions.Length; j += 3)
-                    {
-                        relativeNormals.Add(centroids[j]);
-                        relativeNormals.Add(centroids[j] + levelPrimitive.VertexSurfaceNormals![j] * 16);
-                    }
-                    var normalLineColours = levelPrimitive.VertexPositions
-                        .Select(x => new Color(1.0F, 1.0F, 0.0F)).ToArray();
-
-                    _lineListPrimitives.Add(new LineListPrimitive(GraphicsDevice,
-                        relativeNormals.ToArray(), normalLineColours));
-                    */
                 }
             }
         }
@@ -126,7 +109,6 @@ public class Renderer : Game
 
         _defaultRenderEffect = new BasicEffect(GraphicsDevice)
         {
-            //_defaultRenderEffect.Texture = myTexture;
             LightingEnabled = false,
             TextureEnabled = false,
             VertexColorEnabled = true,
@@ -156,7 +138,7 @@ public class Renderer : Game
 
     protected override void Update(GameTime gameTime)
     {
-        if (this.IsActive)
+        if (IsActive)
         {
             var mouseState = Mouse.GetState();
             var keyboardState = Keyboard.GetState();

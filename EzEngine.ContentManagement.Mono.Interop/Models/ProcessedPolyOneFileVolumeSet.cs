@@ -134,7 +134,6 @@ public class ProcessedPolyOneFileVolumeSet
         for (int i = 0; i < VertexCount; i += 3)
         {
             AxisAlignedBoundingBoxes[currentAABB] = new AxisAlignedBoundingBox(
-            //var currentAABB = new AxisAlignedBoundingBox(
                 [
                     LowerVertices[i],
                     LowerVertices[i + 1],
@@ -145,9 +144,6 @@ public class ProcessedPolyOneFileVolumeSet
                 ]
             );
             currentAABB++;
-            //AxisAlignedBoundingBoxes[i] = currentAABB;
-            //AxisAlignedBoundingBoxes[i + 1] = currentAABB;
-            //AxisAlignedBoundingBoxes[i + 2] = currentAABB;
         }
         var allVertices = LowerVertices.Select(v => new Vector3(v.X, v.Y, v.Z)).ToList();
         allVertices.AddRange(UpperVertices);
@@ -218,67 +214,26 @@ public class ProcessedPolyOneFileVolumeSet
         _compareIntersectY = new Func<double, double, bool>[LowerVertices.Length];
         for (var i = 0; i < LowerVertices.Length; i += 3)
         {
-            var currentToNextX = LowerVertices[i + 1].X - LowerVertices[i].X;
-            var currentToNextY = LowerVertices[i + 1].Y - LowerVertices[i].Y;
-            var pointFactorX = (LowerVertices[i + 2].X - LowerVertices[i].X) / currentToNextX;
-            var pointFactorY = (LowerVertices[i + 2].Y - LowerVertices[i].Y) / currentToNextY;
-            var axisIntersectX = LowerVertices[i].X + (currentToNextX * pointFactorY);
-            var axisIntersectY = LowerVertices[i].Y + (currentToNextY * pointFactorX);
-
-            _compareIntersectX[i] = LowerVertices[i + 2].X < axisIntersectX
-                ? CompareLess
-                : CompareGreater;
-
-            _compareIntersectY[i] = LowerVertices[i + 2].Y < axisIntersectY
-                ? CompareLess
-                : CompareGreater;
-
-            currentToNextX = LowerVertices[i + 2].X - LowerVertices[i + 1].X;
-            currentToNextY = LowerVertices[i + 2].Y - LowerVertices[i + 1].Y;
-            pointFactorX = (LowerVertices[i].X - LowerVertices[i + 1].X) / currentToNextX;
-            pointFactorY = (LowerVertices[i].Y - LowerVertices[i + 1].Y) / currentToNextY;
-            axisIntersectX = LowerVertices[i + 1].X + (currentToNextX * pointFactorY);
-            axisIntersectY = LowerVertices[i + 1].Y + (currentToNextY * pointFactorX);
-
-            _compareIntersectX[i + 1] = LowerVertices[i].X < axisIntersectX
-                ? CompareLess
-                : CompareGreater;
-
-            _compareIntersectY[i + 1] = LowerVertices[i].Y < axisIntersectY
-                ? CompareLess
-                : CompareGreater;
-
-            currentToNextX = LowerVertices[i].X - LowerVertices[i + 2].X;
-            currentToNextY = LowerVertices[i].Y - LowerVertices[i + 2].Y;
-            pointFactorX = (LowerVertices[i + 1].X - LowerVertices[i + 2].X) / currentToNextX;
-            pointFactorY = (LowerVertices[i + 1].Y - LowerVertices[i + 2].Y) / currentToNextY;
-            axisIntersectX = LowerVertices[i + 2].X + (currentToNextX * pointFactorY);
-            axisIntersectY = LowerVertices[i + 2].Y + (currentToNextY * pointFactorX);
-
-            _compareIntersectX[i + 2] = LowerVertices[i + 1].X < axisIntersectX
-                ? CompareLess
-                : CompareGreater;
-
-            _compareIntersectY[i + 2] = LowerVertices[i + 1].Y < axisIntersectY
-                ? CompareLess
-                : CompareGreater;
+            DetermineCollisonPlane(i, i + 1, i + 2);
+            DetermineCollisonPlane(i + 1, i + 2, i);
+            DetermineCollisonPlane(i + 2, i, i + 1);
         }
     }
 
-    private void DetermineCollisonPlanes(int v0Index, int v1Index, int v2Index)
+    private void DetermineCollisonPlane(int vCurrent, int vNext, int vOther)
     {
-        var currentToNextX = LowerVertices[v0Index].X - LowerVertices[v1Index].X;
-        var currentToNextY = LowerVertices[v0Index].Y - LowerVertices[v1Index].Y;
-        var pointFactorX = (LowerVertices[v2Index].X - LowerVertices[v1Index].X) / currentToNextX;
-        var pointFactorY = (LowerVertices[v2Index].Y - LowerVertices[v1Index].Y) / currentToNextY;
-        var axisIntersectX = LowerVertices[v1Index].X + (currentToNextX * pointFactorY);
-        var axisIntersectY = LowerVertices[v1Index].Y + (currentToNextY * pointFactorX);
+        var currentToNextX = LowerVertices[vNext].X - LowerVertices[vCurrent].X;
+        var currentToNextY = LowerVertices[vNext].Y - LowerVertices[vCurrent].Y;
+        var pointFactorX = (LowerVertices[vOther].X - LowerVertices[vCurrent].X) / currentToNextX;
+        var pointFactorY = (LowerVertices[vOther].Y - LowerVertices[vCurrent].Y) / currentToNextY;
+        var axisIntersectX = LowerVertices[vCurrent].X + (currentToNextX * pointFactorY);
+        var axisIntersectY = LowerVertices[vCurrent].Y + (currentToNextY * pointFactorX);
 
-        _compareIntersectX[v0Index] = LowerVertices[v2Index].X < axisIntersectX
+        _compareIntersectX[vCurrent] = LowerVertices[vOther].X < axisIntersectX
             ? CompareLess
             : CompareGreater;
 
-        _compareIntersectY[v0Index] = LowerVertices[v2Index].Y < axisIntersectY
+        _compareIntersectY[vCurrent] = LowerVertices[vOther].Y < axisIntersectY
             ? CompareLess
             : CompareGreater;
     }
