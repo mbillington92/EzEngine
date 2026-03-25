@@ -1,3 +1,4 @@
+using EzEngine.ContentManagement.Mono.Interop.Models;
 using Microsoft.Xna.Framework;
 
 namespace EzEngine.ContentManagement.Mono.Interop;

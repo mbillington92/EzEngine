@@ -148,13 +148,6 @@ public class ProcessedPolyOneFilePrimitive
                     VertexBaseColours[i + j].G * (ambientLightColour.G + finalLightFactor.G) / 255,
                     VertexBaseColours[i + j].B * (ambientLightColour.B + finalLightFactor.B) / 255
                 );
-
-                /*
-                LitVertexColours[i + j] = new Color(
-                    (VertexBaseColours[i + j].R * directionalLightFactor * (directionalLightColour.R / 255)) / 255,
-                    (VertexBaseColours[i + j].G * directionalLightFactor * (directionalLightColour.G / 255)) / 255,
-                    (VertexBaseColours[i + j].B * directionalLightFactor * (directionalLightColour.B / 255)) / 255);
-                */
             }
         }
     }

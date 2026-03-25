@@ -1,10 +1,11 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using EzEngine.ContentManagement.Mono.Interop.Models.Renderables;
+using EzEngine.ContentManagement.Mono.Interop.Interfaces;
 
-namespace EzEngine.ContentManagement.Mono.Interop;
+namespace EzEngine.ContentManagement.Mono.Interop.Models;
 
-public class AxisAlignedBoundingBox
+public class AxisAlignedBoundingBox : IVisualizableAsLineList
 {
     public Vector3 MinimumExtents { get; private set; }
     public Vector3 MaximumExtents { get; private set; }
@@ -36,56 +37,9 @@ public class AxisAlignedBoundingBox
         MaximumExtents = new Vector3(maxX, maxY, maxZ);
     }
 
-    public LineListPrimitive GetVisualization(GraphicsDevice graphicsDevice)
-    {
-        var vertices = new List<Vector3>();
-        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
-        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
-        
-        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
-        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
-
-        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
-        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
-
-        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
-        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
-
-
-        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
-        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
-        
-        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
-        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
-
-        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
-        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
-
-        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
-        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
-
-
-        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
-        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
-
-        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
-        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
-
-        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
-        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
-
-        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
-        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
-
-        var lineColours = vertices.Select(x => new Color(1.0F, 1.0F, 0.0F)).ToArray();
-
-        return new LineListPrimitive(graphicsDevice, [.. vertices], lineColours);
-    }
-
     public bool PointIsWithinXYZ(float x, float y, float z)
     {
-        if (x > MinimumExtents.X && x < MaximumExtents.X &&
-            y > MinimumExtents.Y && y < MaximumExtents.Y &&
+        if (PointIsWithinXY(x, y) &&
             z > MinimumExtents.Z && z < MaximumExtents.Z)
         {
             return true;
@@ -132,5 +86,51 @@ public class AxisAlignedBoundingBox
             return true;
         }
         return false;
+    }
+
+    public LineListPrimitive GetLineListVisualization(GraphicsDevice graphicsDevice, Color? overrideColour = null)
+    {
+        var vertices = new List<Vector3>();
+        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
+        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
+        
+        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
+        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
+
+        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
+        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
+
+        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
+        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
+
+
+        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
+        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
+        
+        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
+        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
+
+        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
+        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
+
+        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
+        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
+
+
+        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
+        vertices.Add(new Vector3(MinimumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
+
+        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MinimumExtents.Z));
+        vertices.Add(new Vector3(MaximumExtents.X, MinimumExtents.Y, MaximumExtents.Z));
+
+        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
+        vertices.Add(new Vector3(MaximumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
+
+        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MinimumExtents.Z));
+        vertices.Add(new Vector3(MinimumExtents.X, MaximumExtents.Y, MaximumExtents.Z));
+
+        var lineColours = vertices.Select(x => new Color(1.0F, 1.0F, 0.0F)).ToArray();
+
+        return new LineListPrimitive(graphicsDevice, [.. vertices], lineColours);
     }
 }

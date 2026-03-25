@@ -42,8 +42,8 @@ public class Renderer : Game
         foreach (var volumeSet in level.Volumes)
         {
             collisionVolumeSets.Add(volumeSet);
-            _lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetVisualization(GraphicsDevice));
-            _lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetVisualization(GraphicsDevice)));
+            _lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetLineListVisualization(GraphicsDevice));
+            _lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetLineListVisualization(GraphicsDevice)));
         }
         foreach (var levelPrimitive in level.PrimitiveGroups[0].Primitives)
         {
@@ -77,8 +77,8 @@ public class Renderer : Game
                         foreach (var volumeSet in model.Volumes)
                         {
                             collisionVolumeSets.Add(volumeSet);
-                            _lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetVisualization(GraphicsDevice));
-                            _lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetVisualization(GraphicsDevice)));
+                            _lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetLineListVisualization(GraphicsDevice));
+                            _lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetLineListVisualization(GraphicsDevice)));
                         }
 
                         foreach (var modelPrimitive in model.PrimitiveGroups[0].Primitives)

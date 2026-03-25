@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using EzEngine.ContentManagement.Models.PolyOneFile;
 using EzEngine.ContentManagement.Mono.Interop.Models.Renderables;
+using EzEngine.ContentManagement.Mono.Interop.Interfaces;
 
 namespace EzEngine.ContentManagement.Mono.Interop.Models;
 
@@ -9,7 +10,7 @@ namespace EzEngine.ContentManagement.Mono.Interop.Models;
 /// A set of vertically-oriented triangular prisms which represents collidable spaces in a PolyOne level or model file.
 /// The triangles formed at the top and bottom sides can be sloped.
 /// </summary>
-public class ProcessedPolyOneFileVolumeSet
+public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
 {
     /// <summary>
     /// Maximum extents of each vertically-oriented triangular prism.
@@ -238,7 +239,7 @@ public class ProcessedPolyOneFileVolumeSet
             : CompareGreater;
     }
 
-    public LineListPrimitive GetLineListPrimitive(GraphicsDevice graphicsDevice)
+    public LineListPrimitive GetLineListVisualization(GraphicsDevice graphicsDevice, Color? overrideColour = null)
     {
         var volumeLineVertices = new List<Vector3>();
         for (int i = 0; i < VertexCount; i += 3)
@@ -266,8 +267,9 @@ public class ProcessedPolyOneFileVolumeSet
             volumeLineVertices.Add(UpperVertices[i + 2]);
             volumeLineVertices.Add(LowerVertices[i + 2]);
         }
+        var colour = overrideColour ?? new Color(0.0F, 0.0F, 0.0F);
         var normalLineColours = volumeLineVertices
-            .Select(x => new Color(1.0F, 0.0F, 0.0F)).ToArray();
+            .Select(x => colour).ToArray();
 
         return new LineListPrimitive(graphicsDevice, [.. volumeLineVertices], normalLineColours);
     }
