@@ -42,6 +42,7 @@ public class Renderer : Game
         foreach (var volumeSet in level.Volumes)
         {
             collisionVolumeSets.Add(volumeSet);
+            _lineListPrimitives.Add(volumeSet.GetLineListVisualization(GraphicsDevice));
             _lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetLineListVisualization(GraphicsDevice));
             _lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetLineListVisualization(GraphicsDevice)));
         }
@@ -77,6 +78,7 @@ public class Renderer : Game
                         foreach (var volumeSet in model.Volumes)
                         {
                             collisionVolumeSets.Add(volumeSet);
+                            _lineListPrimitives.Add(volumeSet.GetLineListVisualization(GraphicsDevice));
                             _lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetLineListVisualization(GraphicsDevice));
                             _lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetLineListVisualization(GraphicsDevice)));
                         }

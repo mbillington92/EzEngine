@@ -151,7 +151,7 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
         OverallAxisAlignedBoundingBox = new AxisAlignedBoundingBox([.. allVertices]);
     }
 
-    public bool PointIsWithinAnyVolume(Vector3 point)
+    public int? PointIsWithinAnyVolume(Vector3 point)
     {
         if (OverallAxisAlignedBoundingBox.PointIsWithinXYZ(point))
         {
@@ -168,12 +168,51 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
                         PointCrossesPlane(point.X, point.Y,
                         rootVertexIndex + 2, rootVertexIndex))
                     {
-                        return true;
+                        return i;
                     }
                 }
             }
         }
-        return false;
+        return null;
+    }
+
+    /// <summary>
+    /// When a collision with a volume has occurred, the previous position of whatever collided should always
+    /// collide with 2 out of 3 of the edges of the triangle that the volume is formed of. Therefore, it can 
+    /// be used for collision resolution to deduce which edge the collision took place on and respond 
+    /// appropriately.
+    /// </summary>
+    /// <param name="previousPosition">The previous or starting position of the point which is known to have 
+    /// collided</param>
+    /// <param name="volumeIndex">The index of the volume which the collision occurred with
+    /// </param>
+    /// <returns>2D vector of the edge that previously was NOT collided with</returns>
+    public Vector2? GetLastNonCollidedSide(Vector3 previousPosition, int volumeIndex)
+    {
+        var rootVertexIndex = volumeIndex * 3;
+        if (!PointCrossesPlane(previousPosition.X, previousPosition.Y, 
+            rootVertexIndex, rootVertexIndex + 1))
+        {
+            //TODO: Make this support volumes with skewed walls in the future if possible
+            return new Vector2(
+                LowerVertices[rootVertexIndex + 1].X - LowerVertices[rootVertexIndex].X,
+                LowerVertices[rootVertexIndex + 1].Y - LowerVertices[rootVertexIndex].Y);
+        }
+        if (!PointCrossesPlane(previousPosition.X, previousPosition.Y,
+            rootVertexIndex + 1, rootVertexIndex + 2))
+        {
+            return new Vector2(
+                LowerVertices[rootVertexIndex + 2].X - LowerVertices[rootVertexIndex + 1].X,
+                LowerVertices[rootVertexIndex + 2].Y - LowerVertices[rootVertexIndex + 1].Y);
+        }
+        if (!PointCrossesPlane(previousPosition.X, previousPosition.Y,
+            rootVertexIndex + 2, rootVertexIndex))
+        {
+            return new Vector2(
+                LowerVertices[rootVertexIndex].X - LowerVertices[rootVertexIndex + 2].X,
+                LowerVertices[rootVertexIndex].Y - LowerVertices[rootVertexIndex + 2].Y);
+        }
+        return null;
     }
 
     /// <summary>
@@ -209,6 +248,16 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
         return result;
     }
 
+    /// <summary>
+    /// Collision detection with volumes works by checking which side of a volume triangle's edge a point
+    /// is on. If the point is on the same side of the triangle which has the vertex that isn't included
+    /// in the test, then it's potentially inside of the triangle. We don't know if I point is definitively
+    /// inside of the triangle until all three edges are tested in this way.
+    /// The comparison to determine which side of the triangle the point is on is always the same,
+    /// assuming no change in rotation or shape of the triangle, so the way to compare is stored per edge
+    /// for the X and Y axes.
+    /// Detection on the Z axis is done differently, but this will be introduced later.
+    /// </summary>
     private void DetermineCollisonPlanes()
     {
         _compareIntersectX = new Func<double, double, bool>[LowerVertices.Length];
@@ -267,7 +316,7 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
             volumeLineVertices.Add(UpperVertices[i + 2]);
             volumeLineVertices.Add(LowerVertices[i + 2]);
         }
-        var colour = overrideColour ?? new Color(0.0F, 0.0F, 0.0F);
+        var colour = overrideColour ?? new Color(1.0F, 0.0F, 0.0F);
         var normalLineColours = volumeLineVertices
             .Select(x => colour).ToArray();
 

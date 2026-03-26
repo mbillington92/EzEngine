@@ -19,6 +19,7 @@ public class NoclipCamera
     public double LocalXRotation { get; private set; }
     public double ZRotation { get; private set; }
     public Vector3 Motion { get; private set; }
+    public double CurrentMaximumSpeed { get; private set; }
     public double MaximumSpeed { get; private set; }
     public double Acceleration { get; private set; }
     public double MouseSensitivity { get; private set; }
@@ -39,6 +40,7 @@ public class NoclipCamera
         LocalXRotation = 0.0D;
         Motion = new Vector3(0.0F, 0.0F, 0.0F);
         MaximumSpeed = 8.0D;
+        CurrentMaximumSpeed = 8.0D;
         Acceleration = 1.0F;
 
         Mouse.SetPosition((int)(_graphicsDevice.Viewport.Width * 0.5), (int)(_graphicsDevice.Viewport.Height * 0.5));
@@ -93,14 +95,48 @@ public class NoclipCamera
             0.0F
         );
 
+        CurrentMaximumSpeed = MaximumSpeed;
+
+        foreach (var volumeSet in volumeSets)
+        {
+            var collidedVolumeIndex = volumeSet.PointIsWithinAnyVolume(new Vector3(_from.X + Motion.X, _from.Y + Motion.Y, _from.Z + Motion.Z));
+
+            if (collidedVolumeIndex is not null)
+            {
+                var lastCollidedEdgeVector = volumeSet.GetLastNonCollidedSide(_from, collidedVolumeIndex.Value);
+                if (lastCollidedEdgeVector is not null)
+                {
+                    var edgeNormal = lastCollidedEdgeVector.Value / (float)Math.Sqrt(Helpers.DistanceSquared(lastCollidedEdgeVector.Value));
+                    var motionVectorLength = (float)Math.Sqrt(Helpers.DistanceSquared(_to - _from));
+                    var motionNormal = (_to - _from) / motionVectorLength;
+
+                    var dotProduct = edgeNormal.X * motionNormal.X
+                        + edgeNormal.Y * motionNormal.Y;
+                    CurrentMaximumSpeed *= dotProduct;
+
+                    Motion = new Vector3(
+                        lastCollidedEdgeVector.Value.X,
+                        lastCollidedEdgeVector.Value.Y,
+                        Motion.Z);
+                }
+                else
+                {
+                    Motion = new Vector3(
+                        0.0F,
+                        0.0F,
+                        Motion.Z);
+                }
+            }
+        }
+
         //Clamp speed
         var motionVectorLengthSquared = Helpers.DistanceSquared(Motion);
-        if (motionVectorLengthSquared > MaximumSpeed * MaximumSpeed)
+        if (motionVectorLengthSquared > CurrentMaximumSpeed * CurrentMaximumSpeed)
         {
             var motionVectorLength = Math.Sqrt(motionVectorLengthSquared);
             Motion = new Vector3(
-                (float)(Motion.X / (motionVectorLength / MaximumSpeed)),
-                (float)(Motion.Y / (motionVectorLength / MaximumSpeed)),
+                (float)(Motion.X / (motionVectorLength / CurrentMaximumSpeed)),
+                (float)(Motion.Y / (motionVectorLength / CurrentMaximumSpeed)),
                 0.0F
             );
         }
@@ -119,17 +155,6 @@ public class NoclipCamera
                     (float)(Motion.X / (motionVectorLength / (motionVectorLength - Acceleration))),
                     (float)(Motion.Y / (motionVectorLength / (motionVectorLength - Acceleration))),
                     0.0F
-                );
-            }
-        }
-        foreach (var volumeSet in volumeSets)
-        {
-            if (volumeSet.PointIsWithinAnyVolume(new Vector3(_from.X + Motion.X, _from.Y + Motion.Y, _from.Z + Motion.Z)))
-            {
-                Motion = new Vector3(
-                    0.0F,
-                    0.0F,
-                    Motion.Z
                 );
             }
         }

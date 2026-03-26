@@ -13,6 +13,11 @@ public static class Helpers
         return Math.Atan2(yDiff, xDiff) + Math.PI; // * 180.0D / Math.PI;
     }
 
+    public static double DistanceSquared(Vector2 p)
+    {
+        return p.X * p.X + p.Y * p.Y;
+    }
+
     /// <summary>
     /// Returns the squared distance between 0,0,0 and p. (Optimization of true distance)
     /// Remember to square the other side of any comparisons on the result.
