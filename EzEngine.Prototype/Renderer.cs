@@ -5,6 +5,9 @@ using EzEngine.ContentManagement.Mono.Interop;
 using EzEngine.ContentManagement.Mono.Interop.Models;
 using EzEngine.ContentManagement.Mono.Interop.Models.Renderables;
 using EzEngine.Prototype.Cameras;
+using System.Diagnostics;
+using ServiceStack;
+using EzEngine.ContentManagement.Mono.Interop.Extensions;
 
 namespace EzEngine.Prototype;
 
@@ -43,9 +46,10 @@ public class Renderer : Game
         {
             collisionVolumeSets.Add(volumeSet);
             _lineListPrimitives.Add(volumeSet.GetLineListVisualization(GraphicsDevice));
-            _lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetLineListVisualization(GraphicsDevice));
-            _lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetLineListVisualization(GraphicsDevice)));
+            //_lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetLineListVisualization(GraphicsDevice));
+            //_lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetLineListVisualization(GraphicsDevice)));
         }
+        var models = new List<ProcessedPolyOneFile?>();
         foreach (var levelPrimitive in level.PrimitiveGroups[0].Primitives)
         {
             if (levelPrimitive.VertexPositions.Length > 0)
@@ -78,36 +82,45 @@ public class Renderer : Game
                         foreach (var volumeSet in model.Volumes)
                         {
                             collisionVolumeSets.Add(volumeSet);
-                            _lineListPrimitives.Add(volumeSet.GetLineListVisualization(GraphicsDevice));
-                            _lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetLineListVisualization(GraphicsDevice));
-                            _lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetLineListVisualization(GraphicsDevice)));
+                            //.Add(volumeSet.GetLineListVisualization(GraphicsDevice));
+                            //_lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetLineListVisualization(GraphicsDevice));
+                            //_lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetLineListVisualization(GraphicsDevice)));
                         }
-
-                        foreach (var modelPrimitive in model.PrimitiveGroups[0].Primitives)
-                        {
-                            modelPrimitive.CalculateLighting([], level.DirectionalLightVector, level.DirectionalLightColour.Value, new Color(0.15F, 0.175F, 0.2F));
-
-                            _triangleListPrimitives.Add(new TriangleListPrimitive(GraphicsDevice,
-                                modelPrimitive.VertexPositions,
-                                modelPrimitive.LitVertexColours,
-                                modelPrimitive.VertexTextureCoordinates,
-                                modelPrimitive.TextureName));
-                        }
+                        models.Add(model);
                     }
-                }
-                else
-                {
-                    levelPrimitive.CalculateLighting([], level.DirectionalLightVector, level.DirectionalLightColour.Value, new Color(0.15F, 0.175F, 0.2F));
-
-                    _triangleListPrimitives.Add(new TriangleListPrimitive(GraphicsDevice,
-                        levelPrimitive.VertexPositions,
-                        levelPrimitive.LitVertexColours,
-                        levelPrimitive.VertexTextureCoordinates,
-                        levelPrimitive.TextureName));
                 }
             }
         }
         _collisionVolumeSets = [.. collisionVolumeSets];
+
+        var lightVector = new Vector3(0.0F, 0.0F, 0.0F);
+
+        //_lineListPrimitives.Add(lightVector.GetLineListVisualization(GraphicsDevice, level.DirectionalLightVector));
+
+        _lineListPrimitives.AddRange(level.PrimitiveGroups
+            .SelectMany(x => x.Primitives)
+            .Where(x => x.Name != "PointLights" && x.Name != "Volumes" && x.Name != "Models")
+            .Select(x => x.VertexPositions.GetLineListVisualization(GraphicsDevice, level.DirectionalLightVector * 4.0F)));
+
+        level.CalculateLighting();
+        _triangleListPrimitives.AddRange(level.PrimitiveGroups
+            .SelectMany(x => x.Primitives)
+            .Where(x => x.Name != "PointLights" && x.Name != "Volumes" && x.Name != "Models")
+            .Select(x => new TriangleListPrimitive(GraphicsDevice, x.VertexPositions, x.LitVertexColours, x.VertexTextureCoordinates, x.TextureName)));
+
+        foreach (var model in models)
+        {
+            model.CalculateLighting();
+            _triangleListPrimitives.AddRange(model.PrimitiveGroups
+                .SelectMany(x => x.Primitives)
+                .Select(x => new TriangleListPrimitive(GraphicsDevice, x.VertexPositions, x.LitVertexColours, x.VertexTextureCoordinates, x.TextureName)));
+
+            _lineListPrimitives.AddRange(level.PrimitiveGroups
+                .SelectMany(x => x.Primitives)
+                .Where(x => x.Name != "PointLights" && x.Name != "Volumes" && x.Name != "Models")
+                .Select(x => x.VertexPositions.GetLineListVisualization(GraphicsDevice, level.DirectionalLightVector * 4.0F)));
+        }
+        
 
         _defaultRenderEffect = new BasicEffect(GraphicsDevice)
         {

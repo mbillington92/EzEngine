@@ -115,10 +115,9 @@ public class ProcessedPolyOneFilePrimitive
         ), normal);
     }
 
-    public void CalculateLighting(ProcessedPolyOneFilePointLight[] pointLights, Vector3 directionalLightVector, Color directionalLightColour, Color ambientLightColour)
+    public void CalculateLighting(ProcessedPolyOneFilePointLight[] pointLights, ProcessedPolyOneFileVolumeSet[] volumeSets, Vector3 directionalLightVector, Color directionalLightColour, Color ambientLightColour)
     {
         var maxNonAmbientLightContrib = new Color(1.0F - ambientLightColour.R / 255, 1.0F - ambientLightColour.G / 255, 1.0F - ambientLightColour.B / 255);
-
         var directionalLightBaseFactor = new Color(
             directionalLightColour.R / 255 * maxNonAmbientLightContrib.R,
             directionalLightColour.G / 255 * maxNonAmbientLightContrib.G,
@@ -140,14 +139,18 @@ public class ProcessedPolyOneFilePrimitive
                 Math.Min(directionalLightFactor * directionalLightBaseFactor.B / 255, maxNonAmbientLightContrib.B / 255)
             );
 
-            for (int j = 0; j < 3; j++)
+            for (var j = 0; j < 3; j++)
             {
-
+                if (Helpers.BinaryRaycast(volumeSets, 10.0F, VertexPositions[i + j], directionalLightVector * 4.0F))
+                {
+                    finalLightFactor.R = 0;
+                    finalLightFactor.G = 0;
+                    finalLightFactor.B = 0;
+                }
                 LitVertexColours[i + j] = new Color(
                     VertexBaseColours[i + j].R * (ambientLightColour.R + finalLightFactor.R) / 255,
                     VertexBaseColours[i + j].G * (ambientLightColour.G + finalLightFactor.G) / 255,
-                    VertexBaseColours[i + j].B * (ambientLightColour.B + finalLightFactor.B) / 255
-                );
+                    VertexBaseColours[i + j].B * (ambientLightColour.B + finalLightFactor.B) / 255);
             }
         }
     }

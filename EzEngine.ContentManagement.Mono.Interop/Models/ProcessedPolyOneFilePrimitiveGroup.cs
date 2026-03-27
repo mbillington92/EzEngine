@@ -27,4 +27,17 @@ public class ProcessedPolyOneFilePrimitiveGroup
             primitive.ApplyTransformation(offset, sine, cosine, nonUniformScale, skewNormal);
         }
     }
+
+    public void CalculateLighting(
+        ProcessedPolyOneFilePointLight[] pointLights,
+        ProcessedPolyOneFileVolumeSet[] volumeSets,
+        Vector3 directionalLightVector,
+        Color directionalLightColour,
+        Color ambientLightColour)
+    {
+        foreach (var primitive in Primitives)
+        {
+            primitive.CalculateLighting(pointLights, volumeSets, directionalLightVector, directionalLightColour, ambientLightColour);
+        }
+    }
 }

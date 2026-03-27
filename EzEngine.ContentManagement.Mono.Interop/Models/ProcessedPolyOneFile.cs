@@ -12,8 +12,8 @@ public class ProcessedPolyOneFile
     public ProcessedPolyOneFileVolumeSet?[] Volumes { get; private set; }
     public Dictionary<string, ProcessedPolyOneFileCustomProperty>? FileCustomProperties { get; private set; }
     public Vector3 DirectionalLightVector { get; private set; }
-    public Color? DirectionalLightColour { get; private set; }
-    public Color? AmbientLightColour { get; private set; }
+    public Color DirectionalLightColour { get; private set; }
+    public Color AmbientLightColour { get; private set; }
     public decimal FileVersion { get; private set; }
     public string OriginalFileName { get; private set; }
 
@@ -225,6 +225,15 @@ public class ProcessedPolyOneFile
             {
                 primitive.VertexSurfaceNormals = Helpers.CalculateSurfaceNormals(primitive.VertexPositions);
             }
+        }
+    }
+
+    public void CalculateLighting()
+    {
+        foreach (var primitiveGroup in PrimitiveGroups)
+        {
+            //TODO: Make ambient light colour configurable
+            primitiveGroup.CalculateLighting(PointLights, Volumes, DirectionalLightVector, DirectionalLightColour, new Color(0.15F, 0.175F, 0.2F));
         }
     }
 }

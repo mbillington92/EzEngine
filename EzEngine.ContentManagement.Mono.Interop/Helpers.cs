@@ -13,6 +13,36 @@ public static class Helpers
         return Math.Atan2(yDiff, xDiff) + Math.PI; // * 180.0D / Math.PI;
     }
 
+    public static bool BinaryRaycast(ProcessedPolyOneFileVolumeSet[] volumeSets, float minimumIterationDistance, Vector3 startPosition, Vector3 endVector)
+    {
+        if (Math.Abs(endVector.X) < minimumIterationDistance &&
+            Math.Abs(endVector.Y) < minimumIterationDistance &&
+            Math.Abs(endVector.Z) < minimumIterationDistance)
+        {
+            return false;
+        }
+
+        foreach (var volumeSet in volumeSets)
+        {
+            if (volumeSet.PointIsWithinAnyVolume(startPosition) is not null)
+            {
+                return true;
+            }
+        }
+
+        var midpoint = endVector * 0.5F;
+        if (BinaryRaycast(volumeSets, minimumIterationDistance, startPosition, midpoint))
+        {
+            return true;
+        }
+        if (BinaryRaycast(volumeSets, minimumIterationDistance, startPosition + midpoint, midpoint))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     public static double DistanceSquared(Vector2 p)
     {
         return p.X * p.X + p.Y * p.Y;
