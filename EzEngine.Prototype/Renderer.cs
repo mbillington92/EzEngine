@@ -112,15 +112,17 @@ public class Renderer : Game
 
         foreach (var model in models)
         {
-            model.CalculateLighting();
+            model.CalculateLighting(level.Volumes);
             _triangleListPrimitives.AddRange(model.PrimitiveGroups
                 .SelectMany(x => x.Primitives)
                 .Select(x => new TriangleListPrimitive(GraphicsDevice, x.VertexPositions, x.LitVertexColours, x.VertexTextureCoordinates, x.TextureName)));
 
+            /*
             _lineListPrimitives.AddRange(model.PrimitiveGroups
                 .SelectMany(x => x.Primitives)
                 .Where(x => x.Name != "PointLights" && x.Name != "Volumes" && x.Name != "Models")
                 .Select(x => x.VertexPositions.GetLineListVisualization(GraphicsDevice, level.DirectionalLightVector * 4.0F)));
+            */
         }
         
 

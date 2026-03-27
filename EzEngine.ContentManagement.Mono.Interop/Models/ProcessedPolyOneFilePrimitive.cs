@@ -143,14 +143,19 @@ public class ProcessedPolyOneFilePrimitive
             {
                 if (Helpers.BinaryRaycast(volumeSets, 10.0F, VertexPositions[i + j], directionalLightVector * 4.0F))
                 {
-                    finalLightFactor.R = 0;
-                    finalLightFactor.G = 0;
-                    finalLightFactor.B = 0;
+                    //Directional light is blocked so only apply ambient
+                    LitVertexColours[i + j] = new Color(
+                        VertexBaseColours[i + j].R * ambientLightColour.R / 255,
+                        VertexBaseColours[i + j].G * ambientLightColour.G / 255,
+                        VertexBaseColours[i + j].B * ambientLightColour.B / 255);
                 }
-                LitVertexColours[i + j] = new Color(
-                    VertexBaseColours[i + j].R * (ambientLightColour.R + finalLightFactor.R) / 255,
-                    VertexBaseColours[i + j].G * (ambientLightColour.G + finalLightFactor.G) / 255,
-                    VertexBaseColours[i + j].B * (ambientLightColour.B + finalLightFactor.B) / 255);
+                else
+                {
+                    LitVertexColours[i + j] = new Color(
+                        VertexBaseColours[i + j].R * (ambientLightColour.R + finalLightFactor.R) / 255,
+                        VertexBaseColours[i + j].G * (ambientLightColour.G + finalLightFactor.G) / 255,
+                        VertexBaseColours[i + j].B * (ambientLightColour.B + finalLightFactor.B) / 255);
+                }
             }
         }
     }
