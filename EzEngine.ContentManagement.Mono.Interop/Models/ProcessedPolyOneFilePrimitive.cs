@@ -115,7 +115,7 @@ public class ProcessedPolyOneFilePrimitive
         ), normal);
     }
 
-    public void CalculateLighting(ProcessedPolyOneFilePointLight[] pointLights, ProcessedPolyOneFileVolumeSet[] volumeSets, Vector3 directionalLightVector, Color directionalLightColour, Color ambientLightColour)
+    public void CalculateLighting(ProcessedPolyOneFilePointLightSet[] pointLights, ProcessedPolyOneFileVolumeSet[] volumeSets, Vector3 directionalLightVector, Color directionalLightColour, Color ambientLightColour)
     {
         var maxNonAmbientLightContrib = new Color(1.0F - ambientLightColour.R / 255, 1.0F - ambientLightColour.G / 255, 1.0F - ambientLightColour.B / 255);
         var directionalLightBaseFactor = new Color(
@@ -128,6 +128,7 @@ public class ProcessedPolyOneFilePrimitive
         directionalLightNormal.Normalize();
         for (var i = 0; i < VertexCount; i += 3)
         {
+
             var dotProduct = VertexSurfaceNormals[i].X * directionalLightNormal.X
                 + VertexSurfaceNormals[i].Y * directionalLightNormal.Y
                 + VertexSurfaceNormals[i].Z * directionalLightNormal.Z;
@@ -141,6 +142,10 @@ public class ProcessedPolyOneFilePrimitive
 
             for (var j = 0; j < 3; j++)
             {
+                if (VertexBaseColours[i + j].R < 3 && VertexBaseColours[i + j].G < 3 && VertexBaseColours[i + j].B < 3)
+                {
+                    continue;
+                }
                 if (Helpers.BinaryRaycast(volumeSets, 10.0F, VertexPositions[i + j], directionalLightVector * 4.0F))
                 {
                     //Directional light is blocked so only apply ambient

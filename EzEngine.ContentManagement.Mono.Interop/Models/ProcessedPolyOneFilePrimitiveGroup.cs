@@ -15,6 +15,7 @@ public class ProcessedPolyOneFilePrimitiveGroup
         Name = layerGroup.Name;
         GroupOrder = layerGroup.GroupOrder;
         Primitives = layerGroup.Layers?
+        //TODO: parameterize NonRenderablePrimitiveFilter
             .Where(x => x.VertexCount > 0 && parent.NonRenderablePrimitiveFilter.Contains(x.Name) == false)
             .Select(x => new ProcessedPolyOneFilePrimitive(x, this))
             .ToArray();
@@ -29,7 +30,7 @@ public class ProcessedPolyOneFilePrimitiveGroup
     }
 
     public void CalculateLighting(
-        ProcessedPolyOneFilePointLight[] pointLights,
+        ProcessedPolyOneFilePointLightSet[] pointLights,
         ProcessedPolyOneFileVolumeSet[] volumeSets,
         Vector3 directionalLightVector,
         Color directionalLightColour,

@@ -13,6 +13,7 @@ public static class Helpers
         return Math.Atan2(yDiff, xDiff) + Math.PI; // * 180.0D / Math.PI;
     }
 
+    //TODO: Add initial offset parameter to avoid small volumes around vertices having an outsized effect on lighting
     public static bool BinaryRaycast(ProcessedPolyOneFileVolumeSet[] volumeSets, float minimumIterationDistance, Vector3 startPosition, Vector3 endVector)
     {
         if (Math.Abs(endVector.X) < minimumIterationDistance &&

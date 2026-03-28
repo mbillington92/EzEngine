@@ -42,6 +42,24 @@ public static class Converters
         return [.. result];
     }
 
+    /// <summary>
+    /// Convert three float arrays to a <see cref="Vector3"/> array, frequently used to represent vertex co-ordinates.
+    /// Typical usage: Convert a raw PolyOne file Layer's VertsX, VertsY and Z custom vertex properties. 
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <param name="z"></param>
+    /// <returns></returns>
+    public static Vector3[] ConvertToVector3s(float[] x, float[] y, float[] z)
+    {
+        var result = new Vector3[x.Length];
+        for (var i = 0; i < x.Length; i++)
+        {
+            result[i] = new Vector3(x[i], y[i], z[i]);
+        }
+        return result;
+    }
+
     public static Vector2[] ConvertToVector2(List<float> x, List<float> y)
     {
         var result = new List<Vector2>();

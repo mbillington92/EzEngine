@@ -5,8 +5,6 @@ using EzEngine.ContentManagement.Mono.Interop;
 using EzEngine.ContentManagement.Mono.Interop.Models;
 using EzEngine.ContentManagement.Mono.Interop.Models.Renderables;
 using EzEngine.Prototype.Cameras;
-using System.Diagnostics;
-using ServiceStack;
 using EzEngine.ContentManagement.Mono.Interop.Extensions;
 
 namespace EzEngine.Prototype;
@@ -56,7 +54,6 @@ public class Renderer : Game
             {
                 if (levelPrimitive.Name == "PointLights")
                 {
-
                 }
                 else if (levelPrimitive.Name == "Volumes")
                 {
@@ -103,6 +100,8 @@ public class Renderer : Game
             .Where(x => x.Name != "PointLights" && x.Name != "Volumes" && x.Name != "Models")
             .Select(x => x.VertexPositions.GetLineListVisualization(GraphicsDevice, level.DirectionalLightVector * 4.0F)));
         */
+
+        _lineListPrimitives.AddRange(level.PointLights.Select(x => x.GetLineListVisualization(GraphicsDevice)));
 
         level.CalculateLighting();
         _triangleListPrimitives.AddRange(level.PrimitiveGroups

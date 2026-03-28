@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 
 namespace EzEngine.ContentManagement.Mono.Interop.Models;
 
+[Obsolete("Use ProcessedPolyOneFilePointLightSet")]
 public class ProcessedPolyOneFilePointLight
 {
     public Vector3 Position { get; set; }

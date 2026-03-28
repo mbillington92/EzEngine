@@ -291,7 +291,7 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
     public LineListPrimitive GetLineListVisualization(GraphicsDevice graphicsDevice, Color? overrideColour = null)
     {
         var volumeLineVertices = new List<Vector3>();
-        for (int i = 0; i < VertexCount; i += 3)
+        for (var i = 0; i < VertexCount; i += 3)
         {
             volumeLineVertices.Add(UpperVertices[i]);
             volumeLineVertices.Add(UpperVertices[i + 1]);

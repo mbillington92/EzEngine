@@ -8,7 +8,7 @@ public class ProcessedPolyOneFile
 {
     public MetaData PolyOneMeta { get; set; } = null!;
     public ProcessedPolyOneFilePrimitiveGroup[] PrimitiveGroups { get; set; } = null!;
-    public ProcessedPolyOneFilePointLight[]? PointLights { get; private set; }
+    public ProcessedPolyOneFilePointLightSet[]? PointLights { get; private set; }
     public ProcessedPolyOneFileVolumeSet[]? Volumes { get; private set; }
     public Dictionary<string, ProcessedPolyOneFileCustomProperty>? FileCustomProperties { get; private set; }
     public Vector3 DirectionalLightVector { get; private set; }
@@ -48,38 +48,9 @@ public class ProcessedPolyOneFile
         OriginalFileName = rawFileData.FileName;
         FileVersion = decimal.Parse(rawFileData.PolyOneMeta.FileVersion);
 
-        PointLights = rawFileData.LayerGroups
-            .SelectMany(x => x.Layers)
-            .Where(x => x.Name == "PointLights")
-            .SelectMany(layer =>
-            {
-                var pointLights = new List<ProcessedPolyOneFilePointLight>();
-                var zPropertyIndex = layer.CustomVertexProperties
-                    .FindIndex(x => x.Name.Equals("z", StringComparison.CurrentCultureIgnoreCase));
-                var vertsZ = zPropertyIndex >= 0
-                    ? layer.CustomVertexProperties[zPropertyIndex].Values
-                        .Select(float.Parse!)
-                        .ToList()
-                    : layer.VertsX
-                        .Select(x => 0.0F)
-                        .ToList();
-                var falloffPropertyIndex = layer.CustomVertexProperties
-                    .FindIndex(x => x.Name.Equals("PointLightFalloffDistance", StringComparison.CurrentCultureIgnoreCase));
-                var falloffs = falloffPropertyIndex >= 0
-                    ? layer.CustomVertexProperties[falloffPropertyIndex].Values
-                        .Select(double.Parse!)
-                        .ToList()
-                    : throw new InvalidOperationException("Point Lights layer didn't specify a falloff distance custom vertex property");
-                for (int i = 0; i < layer.VertexCount; i += 3)
-                {
-                    pointLights.Add(new ProcessedPolyOneFilePointLight
-                    (
-                        layer.VertsX[i], layer.VertsY[i], vertsZ[i], 
-                            Converters.ConvertFromHexLegacy(layer.VertsColour[i]), falloffs[i], this)
-                    );
-                }
-                return pointLights;
-            })
+        PointLights = rawFileData.LayerGroups.SelectMany(x => x.Layers)
+            .Where(x => x.Name.Equals("PointLights", StringComparison.CurrentCultureIgnoreCase))
+            .Select(x => new ProcessedPolyOneFilePointLightSet(x, this))
             .ToArray();
 
         PrimitiveGroups = rawFileData.LayerGroups
@@ -146,6 +117,15 @@ public class ProcessedPolyOneFile
                 Convert.ToSingle(FileCustomProperties["AmbientLightG"].DefaultValue),
                 Convert.ToSingle(FileCustomProperties["AmbientLightB"].DefaultValue));
         }
+        if (FileCustomProperties.Keys.Any(x => x == "LightVectorX") &&
+            FileCustomProperties.Keys.Any(x => x == "LightVectorY") &&
+            FileCustomProperties.Keys.Any(x => x == "LightVectorZ"))
+        {
+            DirectionalLightVector = new Vector3(
+                Convert.ToSingle(FileCustomProperties["LightVectorX"].DefaultValue),
+                Convert.ToSingle(FileCustomProperties["LightVectorY"].DefaultValue),
+                Convert.ToSingle(FileCustomProperties["LightVectorZ"].DefaultValue));
+        }
     }
 
     /// <summary>
@@ -167,6 +147,10 @@ public class ProcessedPolyOneFile
         foreach (var volumeSet in Volumes)
         {
             volumeSet.RemoveOffset(Min, Max);
+        }
+        foreach (var pointLightSet in PointLights)
+        {
+            pointLightSet.RemoveOffset(Min, Max);
         }
         OffsetIsRemoved = true;
     }
@@ -234,7 +218,7 @@ public class ProcessedPolyOneFile
         foreach (var primitiveGroup in PrimitiveGroups)
         {
             //TODO: Make ambient light colour configurable
-            primitiveGroup.CalculateLighting(PointLights, volumes, DirectionalLightVector, DirectionalLightColour, new Color(0.15F, 0.175F, 0.2F));
+            primitiveGroup.CalculateLighting([], volumes, DirectionalLightVector, DirectionalLightColour, new Color(0.15F, 0.175F, 0.2F));
         }
     }
 }
