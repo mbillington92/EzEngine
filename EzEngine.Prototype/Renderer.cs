@@ -43,7 +43,7 @@ public class Renderer : Game
         foreach (var volumeSet in level.Volumes)
         {
             collisionVolumeSets.Add(volumeSet);
-            _lineListPrimitives.Add(volumeSet.GetLineListVisualization(GraphicsDevice));
+            //_lineListPrimitives.Add(volumeSet.GetLineListVisualization(GraphicsDevice));
             //_lineListPrimitives.Add(volumeSet.OverallAxisAlignedBoundingBox.GetLineListVisualization(GraphicsDevice));
             //_lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetLineListVisualization(GraphicsDevice)));
         }
@@ -109,9 +109,14 @@ public class Renderer : Game
             .Where(x => x.Name != "PointLights" && x.Name != "Volumes" && x.Name != "Models")
             .Select(x => new TriangleListPrimitive(GraphicsDevice, x.VertexPositions, x.LitVertexColours, x.VertexTextureCoordinates, x.TextureName)));
 
+        var allVolumes = level.Volumes.ToList();
+        allVolumes.AddRange(models.SelectMany(x => x.Volumes));
+        var allVolumesArray = allVolumes.ToArray();
+
         foreach (var model in models)
         {
-            model.CalculateLighting(level.Volumes);
+            model.CalculateLighting(allVolumesArray, level.PointLights);
+
             _triangleListPrimitives.AddRange(model.PrimitiveGroups
                 .SelectMany(x => x.Primitives)
                 .Select(x => new TriangleListPrimitive(GraphicsDevice, x.VertexPositions, x.LitVertexColours, x.VertexTextureCoordinates, x.TextureName)));

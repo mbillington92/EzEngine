@@ -212,13 +212,14 @@ public class ProcessedPolyOneFile
         }
     }
 
-    public void CalculateLighting(ProcessedPolyOneFileVolumeSet[]? volumesToConsider = null)
+    public void CalculateLighting(ProcessedPolyOneFileVolumeSet[]? volumesToConsider = null, ProcessedPolyOneFilePointLightSet[]? pointLightsToConsider = null)
     {
         var volumes = volumesToConsider ?? Volumes;
+        var pointLights = pointLightsToConsider ?? PointLights;
         foreach (var primitiveGroup in PrimitiveGroups)
         {
             //TODO: Make ambient light colour configurable
-            primitiveGroup.CalculateLighting([], volumes, DirectionalLightVector, DirectionalLightColour, new Color(0.15F, 0.175F, 0.2F));
+            primitiveGroup.CalculateLighting(pointLights, volumes, DirectionalLightVector, DirectionalLightColour, new Color(0.15F, 0.175F, 0.2F));
         }
     }
 }

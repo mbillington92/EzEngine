@@ -115,9 +115,9 @@ public class ProcessedPolyOneFilePrimitive
         ), normal);
     }
 
-    public void CalculateLighting(ProcessedPolyOneFilePointLightSet[] pointLights, ProcessedPolyOneFileVolumeSet[] volumeSets, Vector3 directionalLightVector, Color directionalLightColour, Color ambientLightColour)
+    public void CalculateLighting(ProcessedPolyOneFilePointLightSet[] pointLightSets, ProcessedPolyOneFileVolumeSet[] volumeSets, Vector3 directionalLightVector, Color directionalLightColour, Color ambientLightColour)
     {
-        var maxNonAmbientLightContrib = new Color(1.0F - ambientLightColour.R / 255, 1.0F - ambientLightColour.G / 255, 1.0F - ambientLightColour.B / 255);
+        var maxNonAmbientLightContrib = new Color(255 - ambientLightColour.R, 255 - ambientLightColour.G, 255 - ambientLightColour.B);
         var directionalLightBaseFactor = new Color(
             directionalLightColour.R / 255 * maxNonAmbientLightContrib.R,
             directionalLightColour.G / 255 * maxNonAmbientLightContrib.G,
@@ -128,39 +128,66 @@ public class ProcessedPolyOneFilePrimitive
         directionalLightNormal.Normalize();
         for (var i = 0; i < VertexCount; i += 3)
         {
-
             var dotProduct = VertexSurfaceNormals[i].X * directionalLightNormal.X
                 + VertexSurfaceNormals[i].Y * directionalLightNormal.Y
                 + VertexSurfaceNormals[i].Z * directionalLightNormal.Z;
             var directionalLightFactor = Math.Max(dotProduct, 0.0F);
 
-            var finalLightFactor = new Color(
-                Math.Min(directionalLightFactor * directionalLightBaseFactor.R / 255, maxNonAmbientLightContrib.R / 255),
-                Math.Min(directionalLightFactor * directionalLightBaseFactor.G / 255, maxNonAmbientLightContrib.G / 255),
-                Math.Min(directionalLightFactor * directionalLightBaseFactor.B / 255, maxNonAmbientLightContrib.B / 255)
-            );
-
             for (var j = 0; j < 3; j++)
             {
+                //We can probably get away with not calculating lighting if this vertex already has a very dark base colour.
                 if (VertexBaseColours[i + j].R < 3 && VertexBaseColours[i + j].G < 3 && VertexBaseColours[i + j].B < 3)
                 {
                     continue;
                 }
-                if (Helpers.BinaryRaycast(volumeSets, 10.0F, VertexPositions[i + j], directionalLightVector * 4.0F))
+                var nonAmbientLightR = 0.0F;
+                var nonAmbientLightG = 0.0F;
+                var nonAmbientLightB = 0.0F;
+                foreach (var pointLightSet in pointLightSets)
                 {
-                    //Directional light is blocked so only apply ambient
-                    LitVertexColours[i + j] = new Color(
-                        VertexBaseColours[i + j].R * ambientLightColour.R / 255,
-                        VertexBaseColours[i + j].G * ambientLightColour.G / 255,
-                        VertexBaseColours[i + j].B * ambientLightColour.B / 255);
+                    for (int k = 0; k < pointLightSet.PointLightCount; k++)
+                    {
+                        //Don't use the helper for squared distance in this case because we potentially have to reuse
+                        //the manhattan distance for the direction normal to the light
+                        var xDistance = pointLightSet.Positions[k].X - VertexPositions[i + j].X;
+                        var yDistance = pointLightSet.Positions[k].Y - VertexPositions[i + j].Y;
+                        var zDistance = pointLightSet.Positions[k].Z - VertexPositions[i + j].Z;
+                        var distance = new Vector3(xDistance, yDistance, zDistance);
+                        var distanceSquared = xDistance * xDistance + yDistance * yDistance + zDistance * zDistance;
+                        if (distanceSquared <= pointLightSet.FalloffDistance[k] * pointLightSet.FalloffDistance[k]
+                            && !Helpers.BinaryRaycast(volumeSets, 4.0F, VertexPositions[i + j], distance))
+                        {
+                            var trueDistance = Math.Sqrt(distanceSquared);
+
+                            var pointLightDirectionNormalX = xDistance / trueDistance;
+                            var pointLightDirectionNormalY = yDistance / trueDistance;
+                            var pointLightDirectionNormalZ = zDistance / trueDistance;
+
+                            var pointLightDotProduct = VertexSurfaceNormals[i + j].X * pointLightDirectionNormalX
+                                + VertexSurfaceNormals[i + j].Y * pointLightDirectionNormalY
+                                + VertexSurfaceNormals[i + j].Z * pointLightDirectionNormalZ;
+
+                            var directionBasedIntensity = Math.Max(pointLightDotProduct, 0.0F);
+                            var distanceBasedIntensity = Math.Max(1 - trueDistance / pointLightSet.FalloffDistance[k], 0.0F);
+                            nonAmbientLightR += (float)(directionBasedIntensity * distanceBasedIntensity * pointLightSet.Colours[k].R);
+                            nonAmbientLightG += (float)(directionBasedIntensity * distanceBasedIntensity * pointLightSet.Colours[k].G);
+                            nonAmbientLightB += (float)(directionBasedIntensity * distanceBasedIntensity * pointLightSet.Colours[k].B);
+                        }
+                    }
                 }
-                else
+                //If there's a collisison between the vertex and directional light, then don't apply directional light
+                if (!Helpers.BinaryRaycast(volumeSets, 10.0F, VertexPositions[i + j], directionalLightVector * 4.0F))
                 {
-                    LitVertexColours[i + j] = new Color(
-                        VertexBaseColours[i + j].R * (ambientLightColour.R + finalLightFactor.R) / 255,
-                        VertexBaseColours[i + j].G * (ambientLightColour.G + finalLightFactor.G) / 255,
-                        VertexBaseColours[i + j].B * (ambientLightColour.B + finalLightFactor.B) / 255);
+                    nonAmbientLightR += directionalLightBaseFactor.R * directionalLightFactor;
+                    nonAmbientLightG += directionalLightBaseFactor.G * directionalLightFactor;
+                    nonAmbientLightB += directionalLightBaseFactor.B * directionalLightFactor;
                 }
+
+                LitVertexColours[i + j] = new Color(
+                    (VertexBaseColours[i + j].R * ambientLightColour.R / 255 + Math.Min(nonAmbientLightR, maxNonAmbientLightContrib.R)) / 255,
+                    (VertexBaseColours[i + j].G * ambientLightColour.G / 255 + Math.Min(nonAmbientLightG, maxNonAmbientLightContrib.G)) / 255,
+                    (VertexBaseColours[i + j].B * ambientLightColour.B / 255 + Math.Min(nonAmbientLightB, maxNonAmbientLightContrib.B)) / 255
+                );
             }
         }
     }
