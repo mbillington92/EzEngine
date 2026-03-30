@@ -77,3 +77,7 @@ A: I'm not open to this right now, but may provide options in the future.
 > Can I contribute to the development of EZEngine?
 
 A: This is my first GitHub project or project of any kind with publicly available source code. I don't currently intend to open the project to other contributors, but this may change in the future. Likely I would open a smaller repository to outside contributors first to get a feel for what to expect.
+
+> Is AI of any form used in the development of EZEngine?
+
+A: No, for various reasons, and I intend not to change this at any time in the future. I also ask that if you intend to use EZEngine, you follow the same.
