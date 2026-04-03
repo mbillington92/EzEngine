@@ -15,20 +15,41 @@ public class Renderer : Game
     private NoclipCamera _defaultCamera;
     private List<TriangleListPrimitive> _triangleListPrimitives;
     private List<LineListPrimitive> _lineListPrimitives;
+    
     private BasicEffect _defaultRenderEffect;
+    private SamplerState _defaultSamplerState;
+    private RasterizerState _defaultRasterizerState;
+
+    private RenderTarget2D _sceneRenderTarget;
+    private RenderTarget2D _bloomRenderTarget;
+    private int _bloomRenderTargetDownscaleFactor;
+    private float _bloomRenderTargetDownscaleFraction;
+    private SpriteBatch _spriteBatch;
+
+    private int _preferredBackBufferWidth;
+    private int _preferredBackBufferHeight;
 
     private ProcessedPolyOneFileVolumeSet[] _collisionVolumeSets;
 
     public Renderer()
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
+        _preferredBackBufferWidth = 1920;
+        _preferredBackBufferHeight = 1080;
         Content.RootDirectory = "Content";
+
+        _bloomRenderTargetDownscaleFactor = 8;
+        _bloomRenderTargetDownscaleFraction = 1 / (float)_bloomRenderTargetDownscaleFactor;
     }
 
     protected override void Initialize()
     {
-        _graphicsDeviceManager.PreferredBackBufferWidth = 1920;
-        _graphicsDeviceManager.PreferredBackBufferHeight = 1080;
+        _sceneRenderTarget = new RenderTarget2D(GraphicsDevice, _preferredBackBufferWidth, _preferredBackBufferHeight,
+            false, SurfaceFormat.Color, DepthFormat.Depth16);
+        _bloomRenderTarget = new RenderTarget2D(GraphicsDevice, _preferredBackBufferWidth / _bloomRenderTargetDownscaleFactor, _preferredBackBufferHeight / _bloomRenderTargetDownscaleFactor);
+        _spriteBatch = new SpriteBatch(GraphicsDevice);
+        _graphicsDeviceManager.PreferredBackBufferWidth = _preferredBackBufferWidth;
+        _graphicsDeviceManager.PreferredBackBufferHeight = _preferredBackBufferHeight;
         _graphicsDeviceManager.ApplyChanges();
 
         _triangleListPrimitives = [];
@@ -139,13 +160,22 @@ public class Renderer : Game
             Projection = _defaultCamera.ProjectionMatrix,
             World = Matrix.Identity
         };
-
+        _defaultRasterizerState = new RasterizerState
+        {
+            CullMode = CullMode.CullCounterClockwiseFace,
+            FillMode = FillMode.Solid,
+            DepthBias = 0f,
+            MultiSampleAntiAlias = true,
+            ScissorTestEnable = false,
+            SlopeScaleDepthBias = 0f,
+            DepthClipEnable = true
+        };
         GraphicsDevice.RasterizerState = new RasterizerState
         {
             CullMode = CullMode.CullCounterClockwiseFace,
             FillMode = FillMode.Solid
         };
-        GraphicsDevice.SamplerStates[0] = new SamplerState
+        _defaultSamplerState = new SamplerState
         {
             Filter = TextureFilter.Anisotropic,
             AddressU = TextureAddressMode.Wrap,
@@ -155,6 +185,7 @@ public class Renderer : Game
             MaxMipLevel = 8,
             MipMapLevelOfDetailBias = 0
         };
+        GraphicsDevice.SamplerStates[0] = _defaultSamplerState;
 
         base.Initialize();
     }
@@ -177,7 +208,15 @@ public class Renderer : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        GraphicsDevice.SetRenderTarget(_sceneRenderTarget);
         GraphicsDevice.Clear(Color.Black);
+
+        GraphicsDevice.RasterizerState = _defaultRasterizerState;
+        GraphicsDevice.SamplerStates[0] = _defaultSamplerState;
+
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
+
+        GraphicsDevice.BlendState = BlendState.Opaque;
 
         foreach (var pass in _defaultRenderEffect.CurrentTechnique.Passes)
         {
@@ -192,24 +231,38 @@ public class Renderer : Game
             primitive.Draw(_defaultCamera.ViewMatrix, _defaultCamera.ProjectionMatrix);
         }
 
+        GraphicsDevice.SetRenderTarget(null);
+
+        GraphicsDevice.Clear(Color.Black);
+        _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.Opaque, GraphicsDevice.SamplerStates[0]);
+        _spriteBatch.Draw(_sceneRenderTarget, 
+            Vector2.Zero, 
+            new Rectangle(0, 0, _preferredBackBufferWidth, _preferredBackBufferHeight), 
+            Color.White);
+        _spriteBatch.End();
+
+        GraphicsDevice.SetRenderTarget(_bloomRenderTarget);
+        GraphicsDevice.Clear(Color.Black);
+
+        _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.Opaque, GraphicsDevice.SamplerStates[0]);
+        _spriteBatch.Draw(_sceneRenderTarget, Vector2.Zero, new Rectangle(0, 0, _preferredBackBufferWidth, _preferredBackBufferHeight), Color.White,
+            0F, Vector2.Zero, new Vector2(_bloomRenderTargetDownscaleFraction, _bloomRenderTargetDownscaleFraction), SpriteEffects.None, 0F);
+        _spriteBatch.End();
+
+        GraphicsDevice.SetRenderTarget(null);
+
+        _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.Opaque, GraphicsDevice.SamplerStates[0]);
+        _spriteBatch.Draw(_sceneRenderTarget, 
+            Vector2.Zero, 
+            new Rectangle(0, 0, _preferredBackBufferWidth, _preferredBackBufferHeight), 
+            Color.White);
+        _spriteBatch.End();
+
+        _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.Additive);
+        _spriteBatch.Draw(_bloomRenderTarget, Vector2.Zero, new Rectangle(0, 0, _preferredBackBufferWidth, _preferredBackBufferHeight), Color.Gray,
+            0F, Vector2.Zero, new Vector2(_bloomRenderTargetDownscaleFactor, _bloomRenderTargetDownscaleFactor), SpriteEffects.None, 0F);
+        _spriteBatch.End();
+
         base.Draw(gameTime);
-    }
-
-    private void DrawTerrain(Model model)
-    {
-        foreach (ModelMesh mesh in model.Meshes)
-        {
-            foreach (BasicEffect effect in mesh.Effects)
-            {
-                effect.EnableDefaultLighting();
-                effect.PreferPerPixelLighting = true;
-                effect.World = Matrix.Identity;
-
-                // Use the matrices provided by the game camera
-                effect.View = _defaultCamera.ViewMatrix;
-                effect.Projection = _defaultCamera.ProjectionMatrix;
-            }
-            mesh.Draw();
-        }
     }
 }

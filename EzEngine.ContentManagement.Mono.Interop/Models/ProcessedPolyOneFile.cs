@@ -49,7 +49,7 @@ public class ProcessedPolyOneFile
         FileVersion = decimal.Parse(rawFileData.PolyOneMeta.FileVersion);
 
         PointLights = rawFileData.LayerGroups.SelectMany(x => x.Layers)
-            .Where(x => x.Name.Equals("PointLights", StringComparison.CurrentCultureIgnoreCase))
+            .Where(x => !string.IsNullOrWhiteSpace(x.Name) && x.Name.Equals("PointLights", StringComparison.CurrentCultureIgnoreCase))
             .Select(x => new ProcessedPolyOneFilePointLightSet(x, this))
             .ToArray();
 
