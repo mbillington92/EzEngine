@@ -34,8 +34,8 @@ public class Renderer : Game
     public Renderer()
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
-        _preferredBackBufferWidth = 1920;
-        _preferredBackBufferHeight = 1080;
+        _preferredBackBufferWidth = 2560;
+        _preferredBackBufferHeight = 1440;
         Content.RootDirectory = "Content";
 
         _bloomRenderTargetDownscaleFactor = 8;
@@ -106,6 +106,10 @@ public class Renderer : Game
                         }
                         models.Add(model);
                     }
+                }
+                else
+                {
+                    _lineListPrimitives.Add(levelPrimitive.GetLineListVisualization(GraphicsDevice));
                 }
             }
         }

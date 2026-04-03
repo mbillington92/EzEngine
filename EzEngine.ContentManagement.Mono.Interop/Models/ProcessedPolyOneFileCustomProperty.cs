@@ -1,6 +1,6 @@
 using EzEngine.ContentManagement.Mono.Interop.Enums;
 
-namespace EzEngine.ContentManagement.Mono.Interop;
+namespace EzEngine.ContentManagement.Mono.Interop.Models;
 
 public class ProcessedPolyOneFileCustomProperty
 {

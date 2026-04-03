@@ -16,4 +16,5 @@ public class Layer
     public List<string> VertsColour { get; set; } = null!;
     public List<float> VertsA { get; set; } = null!;
     public List<CustomVertexProperty> CustomVertexProperties { get; set; } = null!;
+    public List<CustomLayerProperty> CustomLayerProperties { get; set; } = null!;
 }

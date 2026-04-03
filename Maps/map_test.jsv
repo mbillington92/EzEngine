@@ -138,6 +138,10 @@
 					],
 					CustomLayerProperties:
 					[
+						{
+							Name:TriSplitPasses,
+							Value:4
+						}
 					]
 				},
 				{
@@ -167,6 +171,10 @@
 					],
 					CustomLayerProperties:
 					[
+						{
+							Name:TriSplitPasses,
+							Value:2
+						}
 					]
 				},
 				{
