@@ -105,11 +105,16 @@ public class Renderer : Game
                             //_lineListPrimitives.AddRange(volumeSet.AxisAlignedBoundingBoxes.Select(x => x.GetLineListVisualization(GraphicsDevice)));
                         }
                         models.Add(model);
+
+                        _lineListPrimitives.AddRange(model.PrimitiveGroups.SelectMany(x => x.Primitives)
+                            .Select(x => x.GetLineListVisualization(GraphicsDevice)));
+
+                        //_lineListPrimitives.Add(levelPrimitive.GetLineListVisualization(GraphicsDevice));
                     }
                 }
                 else
                 {
-                    _lineListPrimitives.Add(levelPrimitive.GetLineListVisualization(GraphicsDevice));
+                    //_lineListPrimitives.Add(levelPrimitive.GetLineListVisualization(GraphicsDevice));
                 }
             }
         }

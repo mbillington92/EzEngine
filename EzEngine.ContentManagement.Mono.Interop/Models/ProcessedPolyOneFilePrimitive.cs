@@ -67,15 +67,15 @@ public class ProcessedPolyOneFilePrimitive : IVisualizableAsLineList
         {
             for (var i = 0; i < VertexCount; i += 3)
             {
-                var splitTris = GetSplitTriangle(VertexPositions[i], VertexPositions[i + 1], VertexPositions[i + 2], splitPassQuantity);
-                for (int j = 0; j < splitTris.Count; j += 1)
-                {
-                    //TODO: set the split colour and textcoords properly
-                    var indexWithModulo = i + j % 3;
-                    splitBaseColours.Add(VertexBaseColours[indexWithModulo]);
-                    splitTextureCoordinates.Add(VertexTextureCoordinates[indexWithModulo]);
-                }
-                splitVertices.AddRange(splitTris);
+                var v0 = new VertexData(VertexPositions[i], VertexBaseColours[i], VertexTextureCoordinates[i]);
+                var v1 = new VertexData(VertexPositions[i + 1], VertexBaseColours[i + 1], VertexTextureCoordinates[i + 1]);
+                var v2 = new VertexData(VertexPositions[i + 2], VertexBaseColours[i + 2], VertexTextureCoordinates[i + 2]);
+
+                var splitTris = GetSplitTriangle(v0, v1, v2, splitPassQuantity);
+
+                splitVertices.AddRange(splitTris.Select(x => x.Position));
+                splitBaseColours.AddRange(splitTris.Select(x => x.Colour));
+                splitTextureCoordinates.AddRange(splitTris.Select(x => x.TextureCoordinate));
             }
             VertexPositions = [.. splitVertices];
             VertexCount = VertexPositions.Length;
@@ -86,13 +86,57 @@ public class ProcessedPolyOneFilePrimitive : IVisualizableAsLineList
         VertexSurfaceNormals = Helpers.CalculateSurfaceNormals(VertexPositions);
     }
 
-    private static List<Vector3> GetSplitTriangle(Vector3 xyz1, Vector3 xyz2, Vector3 xyz3, int iterationsLeft)
+    private class VertexData
+    {
+        public Vector3 Position { get; private set; }
+        public Color Colour { get; private set; }
+        public Vector2 TextureCoordinate { get; private set; }
+
+        public VertexData(Vector3 position, Color colour, Vector2 textureCoordinate)
+        {
+            Position = position;
+            Colour = colour;
+            TextureCoordinate = textureCoordinate;
+        }
+
+        public VertexData GetMidpoint(VertexData v2)
+        {
+            var xPosDiff = v2.Position.X - Position.X;
+            var yPosDiff = v2.Position.Y - Position.Y;
+            var zPosDiff = v2.Position.Z - Position.Z;
+
+            var midpointPosition = new Vector3(
+                Position.X + xPosDiff * 0.5F,
+                Position.Y + yPosDiff * 0.5F,
+                Position.Z + zPosDiff * 0.5F);
+
+            var xTexDiff = v2.TextureCoordinate.X - TextureCoordinate.X;
+            var yTexDiff = v2.TextureCoordinate.Y - TextureCoordinate.Y;
+
+            var midpointTexCoordinate = new Vector2(
+                TextureCoordinate.X + xTexDiff * 0.5F,
+                TextureCoordinate.Y + yTexDiff * 0.5F);
+
+            var colourRDiff = v2.Colour.R - Colour.R;
+            var colourGDiff = v2.Colour.G - Colour.G;
+            var colourBDiff = v2.Colour.B - Colour.B;
+
+            var midpointColour = new Color(
+                Colour.R + colourRDiff * 0.5F,
+                Colour.G + colourGDiff * 0.5F,
+                Colour.B + colourBDiff * 0.5F);
+
+            return new VertexData(midpointPosition, midpointColour, midpointTexCoordinate);
+        }
+    }
+
+    private static List<VertexData> GetSplitTriangle(VertexData xyz1, VertexData xyz2, VertexData xyz3, int iterationsLeft)
     {
         var distancesBetweenVertices = new double[3];
-        distancesBetweenVertices[0] = Helpers.DistanceSquared(xyz1, xyz2);
-        distancesBetweenVertices[1] = Helpers.DistanceSquared(xyz2, xyz3);
-        distancesBetweenVertices[2] = Helpers.DistanceSquared(xyz3, xyz1);
-        var vertices = new Vector3[]
+        distancesBetweenVertices[0] = Helpers.DistanceSquared(xyz1.Position, xyz2.Position);
+        distancesBetweenVertices[1] = Helpers.DistanceSquared(xyz2.Position, xyz3.Position);
+        distancesBetweenVertices[2] = Helpers.DistanceSquared(xyz3.Position, xyz1.Position);
+        var vertices = new VertexData[]
         {
             xyz1,
             xyz2,
@@ -103,54 +147,30 @@ public class ProcessedPolyOneFilePrimitive : IVisualizableAsLineList
         var nextIndex = (maxDistanceIndex + 1) % 3;
         var otherIndex = (maxDistanceIndex + 2) % 3;
 
-        var xDiff = vertices[nextIndex].X - vertices[maxDistanceIndex].X;
-        var yDiff = vertices[nextIndex].Y - vertices[maxDistanceIndex].Y;
-        var zDiff = vertices[nextIndex].Z - vertices[maxDistanceIndex].Z;
+        var midpoint = vertices[maxDistanceIndex].GetMidpoint(vertices[nextIndex]);
 
-        var midpoint = new Vector3(
-            vertices[maxDistanceIndex].X + xDiff * 0.5F,
-            vertices[maxDistanceIndex].Y + yDiff * 0.5F,
-            vertices[maxDistanceIndex].Z + zDiff * 0.5F);
-
-        var result = new List<Vector3>();
+        var result = new List<VertexData>();
         if (iterationsLeft > 0)
         {
-            //result.AddRange(GetSplitTriangle(vertices[maxDistanceIndex], midpoint, vertices[otherIndex], iterationsLeft - 1));
-            //result.AddRange(GetSplitTriangle(vertices[otherIndex], midpoint, vertices[nextIndex], iterationsLeft - 1));
-            result.AddRange(SplitAgain(vertices[maxDistanceIndex], midpoint, vertices[otherIndex], iterationsLeft - 1));
-            result.AddRange(SplitAgain(vertices[otherIndex], midpoint, vertices[nextIndex], iterationsLeft - 1));
+            result.AddRange(SplitAgain(vertices[maxDistanceIndex], midpoint, vertices[otherIndex], iterationsLeft));
+            result.AddRange(SplitAgain(vertices[otherIndex], midpoint, vertices[nextIndex], iterationsLeft));
         }
         else
         {
             result.AddRange(vertices);
-            /*
-            result.Add(vertices[otherIndex]);
-            result.Add(midpoint);
-            result.Add(vertices[maxDistanceIndex]);
-            result.Add(vertices[nextIndex]);
-            result.Add(midpoint);
-            result.Add(vertices[otherIndex]);
-            */
         }
         return result;
     }
 
-    private static List<Vector3> SplitAgain(Vector3 xyz1, Vector3 previousMidpoint, Vector3 xyz2, int iterationsLeft)
+    private static List<VertexData> SplitAgain(VertexData xyz1, VertexData previousMidpoint, VertexData xyz2, int iterationsLeft)
     {
-        var xDiff = xyz2.X - xyz1.X;
-        var yDiff = xyz2.Y - xyz1.Y;
-        var zDiff = xyz2.Z - xyz1.Z;
+        var newMidpointData = xyz1.GetMidpoint(xyz2);
 
-        var newMidpoint = new Vector3(
-            xyz1.X + xDiff * 0.5F,
-            xyz1.Y + yDiff * 0.5F,
-            xyz1.Z + zDiff * 0.5F);
-
-        var result = new List<Vector3>();
+        var result = new List<VertexData>();
         if (iterationsLeft > 0)
         {
-            result.AddRange(GetSplitTriangle(xyz1, previousMidpoint, newMidpoint, iterationsLeft - 1));
-            result.AddRange(GetSplitTriangle(xyz2, newMidpoint, previousMidpoint, iterationsLeft - 1));
+            result.AddRange(GetSplitTriangle(xyz1, previousMidpoint, newMidpointData, iterationsLeft - 1));
+            result.AddRange(GetSplitTriangle(xyz2, newMidpointData, previousMidpoint, iterationsLeft - 1));
         }
         else
         {

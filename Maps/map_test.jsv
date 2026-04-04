@@ -140,7 +140,7 @@
 					[
 						{
 							Name:TriSplitPasses,
-							Value:4
+							Value:2
 						}
 					]
 				},
@@ -173,7 +173,7 @@
 					[
 						{
 							Name:TriSplitPasses,
-							Value:2
+							Value:1
 						}
 					]
 				},
