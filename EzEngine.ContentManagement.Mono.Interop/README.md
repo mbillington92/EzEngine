@@ -58,12 +58,18 @@ Custom properties allow PolyOne files to contain data specific to this library a
 
 ### Supported Layer-Level Custom Properties
 
+- TriSplitPasses: How many times to split all triangles on the primitive/layer, results in better lighting at the expense of performance. Values over 4 are not recommended due to extreme cost of calculating lighting.
+
 ### Supported Vertex-Level Custom Properties
 
 - Z: A fundamental custom property necessary since PolyOne was originally made for 2D games.
 - ZTop: Only processed in primitives named "Volumes", determines the Z position of each vertex on the top triangle of each collidable vertically-oriented triangular prism.
 - PointLightFalloffDistance: Determines the linear falloff distance of point lights in primitives named "PointLights", only read on the first vertex of each triangle
-- ModelName: Determines which model to place for a given triangle, only read on the first vertex of each
+- ModelName: Determines which model to place for a given triangle, only read on the first vertex of each. Ignored on all primitives/layers not named "Models"
+
+### Planned Layer-Level Custom Properties
+
+- TextureScaleX, TextureScaleY
 
 ### Planned File-Level Custom Properties
 
