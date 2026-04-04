@@ -34,10 +34,12 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
     /// The vertices of the lower triangle of each vertically-oriented triangular prism
     /// </summary>
     public Vector3[] LowerVertices { get; private set; }
+    public Vector3[]? LowerVerticesSurfaceNormals { get; private set; }
     /// <summary>
     /// The vertices of the upper triangle of each vertically-oriented triangular prism
     /// </summary>
     public Vector3[] UpperVertices { get; private set; }
+    public Vector3[]? UpperVerticesSurfaceNormals { get; private set; }
     public int VertexCount { get; private set; }
     public readonly ProcessedPolyOneFile Parent;
     public AxisAlignedBoundingBox[] AxisAlignedBoundingBoxes { get; private set; }
@@ -79,6 +81,8 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
             upperZValues[index]
         )).ToArray();
 
+        LowerVerticesSurfaceNormals = Helpers.CalculateSurfaceNormals(LowerVertices);
+        UpperVerticesSurfaceNormals = Helpers.CalculateSurfaceNormals(UpperVertices);
 
         VertexCount = lowerZValues.Length;
         Parent = parent;
@@ -168,12 +172,33 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
                         PointCrossesPlane(point.X, point.Y,
                         rootVertexIndex + 2, rootVertexIndex))
                     {
-                        return i;
+                        if (GetZPlanarIntersection(point, rootVertexIndex))
+                        {
+                            return i;
+                        }
                     }
                 }
             }
         }
         return null;
+    }
+
+    /// <summary>
+    /// Used to determine whether a point is within the upper and lower planes formed by the top and bottom
+    /// triangles of a volume. This projects the plane out to whatever X and Y the point paramter has, so
+    /// shouldn't be used to determine a volume collision alone.
+    /// </summary>
+    /// <param name="point">The position to test against</param>
+    /// <param name="v0Index">The root vertex of the volume to be tested</param>
+    /// <returns></returns>
+    private bool GetZPlanarIntersection(Vector3 point, int v0Index)
+    {
+        var upperNormal = UpperVerticesSurfaceNormals[v0Index];
+        var upperZ = UpperVertices[v0Index].Z - ((point.X - UpperVertices[v0Index].X) * upperNormal.X + (point.Y - UpperVertices[v0Index].Y) * upperNormal.Y) / upperNormal.Z;
+        var lowerNormal = LowerVerticesSurfaceNormals[v0Index];
+        var lowerZ = LowerVertices[v0Index].Z - ((point.X - LowerVertices[v0Index].X) * lowerNormal.X + (point.Y - LowerVertices[v0Index].Y) * lowerNormal.Y) / lowerNormal.Z;
+
+        return point.Z < upperZ && point.Z >= lowerZ;
     }
 
     /// <summary>

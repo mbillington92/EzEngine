@@ -65,6 +65,7 @@ public class NoclipCamera
 
         var localMotionSignX = 0;
         var localMotionSignY = 0;
+        var localMotionSignZ = 0;
         if (keyboardState.IsKeyDown(Keys.W))
         {
             localMotionSignX += 1;
@@ -83,16 +84,18 @@ public class NoclipCamera
         }
         if (keyboardState.IsKeyDown(Keys.Space))
         {
-            _from.Z += 4;
+            //_from.Z += 4;
+            localMotionSignZ += 1;
         }
         if (keyboardState.IsKeyDown(Keys.C))
         {
-            _from.Z -= 4;
+            //_from.Z -= 4;
+            localMotionSignZ -= 1;
         }
         Motion = new Vector3(
             (float)(Motion.X + Acceleration * zRotationCos * localMotionSignX + Acceleration * zPerpendicularCos * localMotionSignY),
             (float)(Motion.Y + Acceleration * zRotationSin * localMotionSignX + Acceleration * zPerpendicularSin * localMotionSignY),
-            0.0F
+            localMotionSignZ * 4.0F
         );
 
         CurrentMaximumSpeed = MaximumSpeed;
@@ -117,14 +120,14 @@ public class NoclipCamera
                     Motion = new Vector3(
                         lastCollidedEdgeVector.Value.X,
                         lastCollidedEdgeVector.Value.Y,
-                        Motion.Z);
+                        0.0F);
                 }
                 else
                 {
                     Motion = new Vector3(
                         0.0F,
                         0.0F,
-                        Motion.Z);
+                        0.0F);
                 }
             }
         }
@@ -137,7 +140,7 @@ public class NoclipCamera
             Motion = new Vector3(
                 (float)(Motion.X / (motionVectorLength / CurrentMaximumSpeed)),
                 (float)(Motion.Y / (motionVectorLength / CurrentMaximumSpeed)),
-                0.0F
+                Motion.Z
             );
         }
         //Apply friction/speed reduction
@@ -154,13 +157,14 @@ public class NoclipCamera
                 Motion = new Vector3(
                     (float)(Motion.X / (motionVectorLength / (motionVectorLength - Acceleration))),
                     (float)(Motion.Y / (motionVectorLength / (motionVectorLength - Acceleration))),
-                    0.0F
+                    Motion.Z
                 );
             }
         }
 
         _from.X += Motion.X;
         _from.Y += Motion.Y;
+        _from.Z += Motion.Z;
 
         _to.X = (float)(_from.X + zRotationCos * xPerpendicularCos);
         _to.Y = (float)(_from.Y + zRotationSin * xPerpendicularCos);
