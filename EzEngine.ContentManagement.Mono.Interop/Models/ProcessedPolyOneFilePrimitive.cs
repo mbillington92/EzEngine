@@ -86,18 +86,11 @@ public class ProcessedPolyOneFilePrimitive : IVisualizableAsLineList
         VertexSurfaceNormals = Helpers.CalculateSurfaceNormals(VertexPositions);
     }
 
-    private class VertexData
+    private class VertexData(Vector3 position, Color colour, Vector2 textureCoordinate)
     {
-        public Vector3 Position { get; private set; }
-        public Color Colour { get; private set; }
-        public Vector2 TextureCoordinate { get; private set; }
-
-        public VertexData(Vector3 position, Color colour, Vector2 textureCoordinate)
-        {
-            Position = position;
-            Colour = colour;
-            TextureCoordinate = textureCoordinate;
-        }
+        public Vector3 Position { get; private set; } = position;
+        public Color Colour { get; private set; } = colour;
+        public Vector2 TextureCoordinate { get; private set; } = textureCoordinate;
 
         public VertexData GetMidpoint(VertexData v2)
         {
@@ -122,9 +115,9 @@ public class ProcessedPolyOneFilePrimitive : IVisualizableAsLineList
             var colourBDiff = v2.Colour.B - Colour.B;
 
             var midpointColour = new Color(
-                Colour.R + colourRDiff * 0.5F,
-                Colour.G + colourGDiff * 0.5F,
-                Colour.B + colourBDiff * 0.5F);
+                (byte)(Colour.R + colourRDiff * 0.5F),
+                (byte)(Colour.G + colourGDiff * 0.5F),
+                (byte)(Colour.B + colourBDiff * 0.5F));
 
             return new VertexData(midpointPosition, midpointColour, midpointTexCoordinate);
         }

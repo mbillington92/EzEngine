@@ -106,8 +106,8 @@ public class Renderer : Game
                         }
                         models.Add(model);
 
-                        _lineListPrimitives.AddRange(model.PrimitiveGroups.SelectMany(x => x.Primitives)
-                            .Select(x => x.GetLineListVisualization(GraphicsDevice)));
+                        //_lineListPrimitives.AddRange(model.PrimitiveGroups.SelectMany(x => x.Primitives)
+                        //    .Select(x => x.GetLineListVisualization(GraphicsDevice)));
 
                         //_lineListPrimitives.Add(levelPrimitive.GetLineListVisualization(GraphicsDevice));
                     }

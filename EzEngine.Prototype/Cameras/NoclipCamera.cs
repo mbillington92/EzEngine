@@ -171,6 +171,6 @@ public class NoclipCamera
         LastMousePosition = new Point((int)(_graphicsDevice.Viewport.Width * 0.5), (int)(_graphicsDevice.Viewport.Height * 0.5));
 
         ViewMatrix = Matrix.CreateLookAt(_from, _to, _up);
-        ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(75.0F), AspectRatio, 1, 10240);
+        ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(75.0F), AspectRatio, 1, 4095.0f);
     }
 }
