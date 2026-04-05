@@ -38,7 +38,7 @@ public class FirstPersonShooterCamera
 
     public FirstPersonShooterCamera(GraphicsDevice graphicsDevice)
     {
-        _from = new Vector3(-2048.0F, 896.0F, 0.0F);
+        _from = new Vector3(-1792.0F, 1024.0F, 0.0F);
         _to = new Vector3(0.0F, 1024.0F, 0.0F);
         _up = new Vector3(0.0F, 0.0F, 1.0F);
         _graphicsDevice = graphicsDevice;
@@ -82,7 +82,6 @@ public class FirstPersonShooterCamera
 
         var localMotionSignX = 0;
         var localMotionSignY = 0;
-        var localMotionSignZ = 0;
 
         if (keyboardState.IsKeyDown(Keys.W))
         {
@@ -100,48 +99,40 @@ public class FirstPersonShooterCamera
         {
             localMotionSignY -= 1;
         }
-        if (keyboardState.IsKeyDown(Keys.Space))
-        {
-            //TODO: Jump
-        }
         _motion = new Vector3(
             (float)(_motion.X + _acceleration * zRotationCos * localMotionSignX + _acceleration * zPerpendicularCos * localMotionSignY),
             (float)(_motion.Y + _acceleration * zRotationSin * localMotionSignX + _acceleration * zPerpendicularSin * localMotionSignY),
-            localMotionSignZ * 4.0F
+            _motion.Z
         );
 
         _currentMaximumSpeed = _maximumSpeed;
         _floorZPrevious = _floorZ;
+        _floorZ = -1024.0F;
 
         CollisionCheck(volumeSets);
 
         //Clamp speed
-        var motionVectorLengthSquared = Helpers.DistanceSquared(_motion);
+        var motionVectorLengthSquared = Helpers.DistanceSquared(_motion.X, _motion.Y);
         if (motionVectorLengthSquared > _currentMaximumSpeed * _currentMaximumSpeed)
         {
             var motionVectorLength = Math.Sqrt(motionVectorLengthSquared);
-            _motion = new Vector3(
-                (float)(_motion.X / (motionVectorLength / _currentMaximumSpeed)),
-                (float)(_motion.Y / (motionVectorLength / _currentMaximumSpeed)),
-                _motion.Z
-            );
+            _motion.X = (float)(_motion.X / (motionVectorLength / _currentMaximumSpeed));
+            _motion.Y = (float)(_motion.Y / (motionVectorLength / _currentMaximumSpeed));
         }
         //Apply friction/speed reduction
         if (localMotionSignX == 0 && localMotionSignY == 0)
         {
-            motionVectorLengthSquared = Helpers.DistanceSquared(_motion);
+            motionVectorLengthSquared = Helpers.DistanceSquared(_motion.X, _motion.Y);
             if (motionVectorLengthSquared < _acceleration * _acceleration)
             {
-                _motion = new Vector3(0.0F, 0.0F, 0.0F);
+                _motion.X = 0.0F;
+                _motion.Y = 0.0F;
             }
             else if (motionVectorLengthSquared > 0.0D)
             {
                 var motionVectorLength = Math.Sqrt(motionVectorLengthSquared);
-                _motion = new Vector3(
-                    (float)(_motion.X / (motionVectorLength / (motionVectorLength - _acceleration))),
-                    (float)(_motion.Y / (motionVectorLength / (motionVectorLength - _acceleration))),
-                    _motion.Z
-                );
+                _motion.X = (float)(_motion.X / (motionVectorLength / (motionVectorLength - _acceleration)));
+                _motion.Y = (float)(_motion.Y / (motionVectorLength / (motionVectorLength - _acceleration)));
             }
         }
 
@@ -149,16 +140,14 @@ public class FirstPersonShooterCamera
         {
             _motion.Z -= _gravity;
         }
+        if (keyboardState.IsKeyDown(Keys.Space) && _from.Z == _floorZ)
+        {
+            _motion.Z = _jumpSpeed;
+        }
 
         _from.X += _motion.X;
         _from.Y += _motion.Y;
         _from.Z += _motion.Z;
-
-        if (keyboardState.IsKeyDown(Keys.Space) && _from.Z == _floorZ)
-        {
-            //TODO: Jump
-            _motion.Z = _jumpSpeed;
-        }
 
         _to.X = (float)(_from.X + zRotationCos * xPerpendicularCos);
         _to.Y = (float)(_from.Y + zRotationSin * xPerpendicularCos);
@@ -207,17 +196,13 @@ public class FirstPersonShooterCamera
                             + edgeNormal.Y * motionNormal.Y;
                         _currentMaximumSpeed *= dotProduct;
 
-                        _motion = new Vector3(
-                            lastCollidedEdgeVector.Value.X,
-                            lastCollidedEdgeVector.Value.Y,
-                            0.0F);
+                        _motion.X = lastCollidedEdgeVector.Value.X;
+                        _motion.Y = lastCollidedEdgeVector.Value.Y;
                     }
                     else
                     {
-                        _motion = new Vector3(
-                            0.0F,
-                            0.0F,
-                            0.0F);
+                        _motion.X = 0.0F;
+                        _motion.Y = 0.0F;
                     }
                 }
             }

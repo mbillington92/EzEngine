@@ -49,6 +49,11 @@ public static class Helpers
         return p.X * p.X + p.Y * p.Y;
     }
 
+    public static double DistanceSquared(float x, float y)
+    {
+        return x * x + y * y;
+    }
+
     /// <summary>
     /// Returns the squared distance between 0,0,0 and p. (Optimization of true distance)
     /// Remember to square the other side of any comparisons on the result.
