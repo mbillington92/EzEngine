@@ -88,6 +88,15 @@ public class AxisAlignedBoundingBox : IVisualizableAsLineList
         return false;
     }
 
+    public bool PointIsWithinZ(float z)
+    {
+        if (z > MinimumExtents.Z && z < MaximumExtents.Z)
+        {
+            return true;
+        }
+        return false;
+    }
+
     public LineListPrimitive GetLineListVisualization(GraphicsDevice graphicsDevice, Color? overrideColour = null)
     {
         var vertices = new List<Vector3>();

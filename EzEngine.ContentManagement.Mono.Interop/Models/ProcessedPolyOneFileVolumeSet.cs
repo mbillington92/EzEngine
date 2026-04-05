@@ -34,12 +34,12 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
     /// The vertices of the lower triangle of each vertically-oriented triangular prism
     /// </summary>
     public Vector3[] LowerVertices { get; private set; }
-    public Vector3[]? LowerVerticesSurfaceNormals { get; private set; }
+    public Vector3[] LowerVerticesSurfaceNormals { get; private set; }
     /// <summary>
     /// The vertices of the upper triangle of each vertically-oriented triangular prism
     /// </summary>
     public Vector3[] UpperVertices { get; private set; }
-    public Vector3[]? UpperVerticesSurfaceNormals { get; private set; }
+    public Vector3[] UpperVerticesSurfaceNormals { get; private set; }
     public int VertexCount { get; private set; }
     public readonly ProcessedPolyOneFile Parent;
     public AxisAlignedBoundingBox[] AxisAlignedBoundingBoxes { get; private set; }
@@ -155,6 +155,36 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
         OverallAxisAlignedBoundingBox = new AxisAlignedBoundingBox([.. allVertices]);
     }
 
+    public int? PointIsWithinAnyVolume2D(float x, float y, int lastIndexToCheck)
+    {
+        if (OverallAxisAlignedBoundingBox.PointIsWithinXY(x, y))
+        {
+            for (var i = 0; i < lastIndexToCheck; i++)
+            {
+                if (AxisAlignedBoundingBoxes[i]
+                    .PointIsWithinXY(x, y))
+                {
+                    var rootVertexIndex = i * 3;
+                    if (PointCrossesPlane(x, y, 
+                        rootVertexIndex, rootVertexIndex + 1) &&
+                        PointCrossesPlane(x, y,
+                        rootVertexIndex + 1, rootVertexIndex + 2) &&
+                        PointCrossesPlane(x, y,
+                        rootVertexIndex + 2, rootVertexIndex))
+                    {
+                        return i;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public int? PointIsWithinAnyVolume2D(float x, float y)
+    {
+        return PointIsWithinAnyVolume2D(x, y, AxisAlignedBoundingBoxes.Length);
+    }
+
     public int? PointIsWithinAnyVolume(Vector3 point)
     {
         if (OverallAxisAlignedBoundingBox.PointIsWithinXYZ(point))
@@ -199,6 +229,11 @@ public class ProcessedPolyOneFileVolumeSet : IVisualizableAsLineList
         var lowerZ = LowerVertices[v0Index].Z - ((point.X - LowerVertices[v0Index].X) * lowerNormal.X + (point.Y - LowerVertices[v0Index].Y) * lowerNormal.Y) / lowerNormal.Z;
 
         return point.Z < upperZ && point.Z >= lowerZ;
+    }
+
+    public static float GetZPlanarIntersection(Vector3 v0, Vector3 normal, Vector3 point)
+    {
+        return v0.Z - ((point.X - v0.X) * normal.X + (point.Y - v0.Y) * normal.Y) / normal.Z;
     }
 
     /// <summary>

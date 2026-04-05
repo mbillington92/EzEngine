@@ -12,7 +12,8 @@ namespace EzEngine.Prototype;
 public class Renderer : Game
 {
     private GraphicsDeviceManager _graphicsDeviceManager;
-    private NoclipCamera _defaultCamera;
+    //private NoclipCamera _defaultCamera;
+    private FirstPersonShooterCamera _defaultCamera;
     private List<TriangleListPrimitive> _triangleListPrimitives;
     private List<LineListPrimitive> _lineListPrimitives;
     
@@ -54,7 +55,7 @@ public class Renderer : Game
 
         _triangleListPrimitives = [];
         _lineListPrimitives = [];
-        _defaultCamera = new NoclipCamera(GraphicsDevice);
+        _defaultCamera = new FirstPersonShooterCamera(GraphicsDevice); //new NoclipCamera(GraphicsDevice);
 
         var collisionVolumeSets = new List<ProcessedPolyOneFileVolumeSet>();
 
